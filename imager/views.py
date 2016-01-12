@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from .forms import *
@@ -53,10 +53,11 @@ def upload(request):
   else:
     form = DocumentForm(request.POST, request.FILES)
     for filename, file in request.FILES.iteritems():
-      name = request.FILES[filename].name
+      name = '%s.jpg' % uuid.uuid1()
       with open('%s/%s' % (image_locations, name), "wb") as code:
         code.write(file.read())
         logger.info('upload image successfully: images/%s' % name)
+    return redirect('imager:upload')
 
   images = next(os.walk(image_locations))[2]
   return render(request,'imager/upload.html',{'images': images, 'form': form})
