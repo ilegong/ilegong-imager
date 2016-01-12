@@ -1,6 +1,11 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
+from .forms import *
+from .models import *
+from django.conf import settings
+from os import listdir
+from os.path import isfile, join
 import urllib2, uuid, os, json, logging
 logger = logging.getLogger(__name__)
 
@@ -29,7 +34,7 @@ def download_wx_image(request):
 
   filename = '%s.jpg' % uuid.uuid1()
   relative_directory = 'images/%d/%02d/%02d' % (now.year, now.month, now.day)
-  absolute_directory = '/Users/aqingsao/storage/%s' % relative_directory
+  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
   image_url = '%s/%s'%(relative_directory, filename)
 
   if not os.path.exists(absolute_directory):
@@ -40,3 +45,18 @@ def download_wx_image(request):
     logger.info('download wx image: %s, save as: %s' % (request.GET['media_id'], image_url))
 
   return JsonResponse({'result': True, 'url': image_url})
+
+def upload(request):
+  image_locations = '%s/images'% settings.STORAGE_ROOT
+  if request.method == "GET":
+    form = DocumentForm()
+  else:
+    form = DocumentForm(request.POST, request.FILES)
+    for filename, file in request.FILES.iteritems():
+      name = request.FILES[filename].name
+      with open('%s/%s' % (image_locations, name), "wb") as code:
+        code.write(file.read())
+        logger.info('upload image successfully: images/%s' % name)
+
+  images = next(os.walk(image_locations))[2]
+  return render(request,'imager/upload.html',{'images': images, 'form': form})
