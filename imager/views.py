@@ -14,9 +14,14 @@ logger = logging.getLogger(__name__)
 def index(request):
   return HttpResponse("Hello, world. You're at the polls index.")
 
+@csrf_exempt
 def download_wx_image(request):
   now = timezone.now()
-  url = "http://file.api.weixin.qq.com/cgi-bin/media/get?access_token=%s&media_id=%s"%(request.GET['access_token'], request.GET['media_id'])
+  if request.method == "GET":
+    url = "http://file.api.weixin.qq.com/cgi-bin/media/get?access_token=%s&media_id=%s"%(request.GET['access_token'], request.GET['media_id'])    
+  else:
+    url = "http://file.api.weixin.qq.com/cgi-bin/media/get?access_token=%s&media_id=%s"%(request.POST['access_token'], request.POST['media_id'])
+
   try:
     response = urllib2.urlopen(url)
     if response.getcode() != 200:
