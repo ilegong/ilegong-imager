@@ -1,4 +1,5 @@
 {% extends "imager/base.html" %}
+{% load static %}
 
 {% block content %}
 <div class="images-container">
@@ -22,13 +23,14 @@
       {% csrf_token %}
       <p>{{ form.non_field_errors }}</p>
 
-      <p>
-          {{ form.docfile }}
-      </p>
-
+      <div><input type="file" name="images" multiple></div>
       <p><input class="btn btn-info" type="submit" value="点击上传"/></p>
     </form>
   </div>
-</div>  
+</div>
 {%endblock%}
+
+{% block scripts %}
+  <script type="text/javascript" src="{% static "imager/js/upload.js" %}"></script>
+{% endblock %}
 

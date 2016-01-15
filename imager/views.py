@@ -52,11 +52,13 @@ def upload(request):
     form = DocumentForm()
   else:
     form = DocumentForm(request.POST, request.FILES)
-    for filename, file in request.FILES.iteritems():
+    for file in request.FILES.getlist('images'):
       name = '%s.jpg' % uuid.uuid1()
-      with open('%s/%s' % (image_locations, name), "wb") as code:
-        code.write(file.read())
-        logger.info('upload image successfully: images/%s' % name)
+      logger.info('try to upload image %s to images/%s' % (file.name, name))
+      with open('%s/%s' % (image_locations, name), "wb") as local_image:
+        for chunk in file.chunks():
+            local_image.write(chunk)
+        logger.info('upload image %s to images/%s successfully' % (file.name, name))
     return redirect('imager:upload')
 
   images = next(os.walk(image_locations))[2]
