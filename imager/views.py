@@ -6,7 +6,7 @@ from .models import *
 from django.conf import settings
 from os import listdir
 from os.path import isfile, join
-import urllib2, uuid, os, json, logging
+import urllib2, uuid, os, json, logging, glob
 logger = logging.getLogger(__name__)
 
 # Create your views here.
@@ -61,5 +61,6 @@ def upload(request):
         logger.info('upload image %s to images/%s successfully' % (file.name, name))
     return redirect('imager:upload')
 
-  images = next(os.walk(image_locations))[2]
+  images = filter(os.path.isfile, glob.glob(image_locations + "/*"))
+  images.sort(key=lambda x: os.path.getmtime(x))
   return render(request,'imager/upload.html',{'images': images, 'form': form})
