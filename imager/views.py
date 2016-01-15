@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 from .models import *
 from django.conf import settings
@@ -16,7 +17,6 @@ def index(request):
 def download_wx_image(request):
   now = timezone.now()
   url = "http://file.api.weixin.qq.com/cgi-bin/media/get?access_token=%s&media_id=%s"%(request.GET['access_token'], request.GET['media_id'])
-  # url = 'http://51daifan-images.stor.sinaapp.com/D11lszUt2x8ch1jZT9adeRqxJqvLmYBhEevywDIWKUA5lM6dICy6L5orKiOwL652.jpg';
   try:
     response = urllib2.urlopen(url)
     if response.getcode() != 200:
@@ -45,6 +45,37 @@ def download_wx_image(request):
     logger.info('download wx image: %s, save as: %s' % (request.GET['media_id'], image_url))
 
   return JsonResponse({'result': True, 'url': image_url})
+
+@csrf_exempt
+def download_wx_avatar(request):
+  if request.method == "GET":
+    return HttpResponseNotAllowed('Only POST here')
+
+  now = timezone.now()
+  url = request.POST['url'];
+  try:
+    response = urllib2.urlopen(url)
+    if response.getcode() != 200:
+      logger.warn('Failed to download wx avatar, response code: %s' % response.getcode())
+      return JsonResponse({'result': False, 'reason': 'response code %s' % response.getcode()})
+
+  except urllib2.URLError, e:
+    logger.warn('Failed to download wx avatar, error: %s' % str(e))
+    return JsonResponse({'result': False, 'code':'URLError', 'message': e})
+
+  filename = '%s.jpg' % uuid.uuid1()
+  relative_directory = 'avatar/%d/%02d/%02d' % (now.year, now.month, now.day)
+  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
+  avatar_url = '%s/%s'%(relative_directory, filename)
+
+  if not os.path.exists(absolute_directory):
+    os.makedirs(absolute_directory)
+
+  with open('%s/%s' % (absolute_directory, filename), "wb") as code:
+    code.write(response.read())
+    logger.info('download avatar image: %s, save as: %s' % (url, avatar_url))
+
+  return JsonResponse({'result': True, 'url': avatar_url})
 
 def upload(request):
   image_locations = '%s/images'% settings.STORAGE_ROOT
