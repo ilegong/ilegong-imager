@@ -51,37 +51,6 @@ def download_wx_image(request):
 
   return JsonResponse({'result': True, 'url': image_url})
 
-@csrf_exempt
-def download_wx_avatar(request):
-  if request.method == "GET":
-    return HttpResponseNotAllowed('Only POST here')
-
-  now = timezone.now()
-  url = request.POST['url'];
-  try:
-    response = urllib2.urlopen(url)
-    if response.getcode() != 200:
-      logger.warn('Failed to download wx avatar, response code: %s' % response.getcode())
-      return JsonResponse({'result': False, 'reason': 'response code %s' % response.getcode()})
-
-  except urllib2.URLError, e:
-    logger.warn('Failed to download wx avatar, error: %s' % str(e))
-    return JsonResponse({'result': False, 'code':'URLError', 'message': e})
-
-  filename = 'wx_head_%s.jpg' % uuid.uuid1()
-  relative_directory = 'avatar/%d/%02d/%02d' % (now.year, now.month, now.day)
-  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
-  avatar_url = '%s/%s'%(relative_directory, filename)
-
-  if not os.path.exists(absolute_directory):
-    os.makedirs(absolute_directory)
-
-  with open('%s/%s' % (absolute_directory, filename), "wb") as code:
-    code.write(response.read())
-    logger.info('download avatar image: %s, save as: %s' % (url, avatar_url))
-
-  return JsonResponse({'result': True, 'url': avatar_url})
-
 def upload(request):
   image_locations = '%s/images'% settings.STORAGE_ROOT
   if request.method == "GET":
@@ -101,3 +70,35 @@ def upload(request):
   images.sort(key=lambda x: os.path.getmtime(x))
   images = [os.path.basename(x) for x in images]
   return render(request,'imager/upload.html',{'images': images, 'form': form})
+
+@csrf_exempt
+def download_avatar(request):
+  if request.method == "GET":
+    return HttpResponseNotAllowed('Only POST here')
+
+  now = timezone.now()
+  url = request.POST['url'];
+  logger.debug('Start to download avatar %s' % url)
+  try:
+    response = urllib2.urlopen(url)
+    if response.getcode() != 200:
+      logger.warn('Failed to download avatar %s, response code: %s' % (url, response.getcode()))
+      return JsonResponse({'result': False, 'reason': 'response code %s' % response.getcode()})
+
+  except urllib2.URLError, e:
+    logger.warn('Failed to download avatar %s, error: %s' % (url, str(e)))
+    return JsonResponse({'result': False, 'code':'URLError', 'message': e})
+
+  filename = 'wx_head_%s.jpg' % uuid.uuid1()
+  relative_directory = 'avatar/%d/%02d/%02d' % (now.year, now.month, now.day)
+  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
+  avatar_url = '%s/%s'%(relative_directory, filename)
+
+  if not os.path.exists(absolute_directory):
+    os.makedirs(absolute_directory)
+
+  with open('%s/%s' % (absolute_directory, filename), "wb") as code:
+    code.write(response.read())
+    logger.info('download avatar: %s, save as: %s' % (url, avatar_url))
+
+  return JsonResponse({'result': True, 'url': avatar_url})
