@@ -68,7 +68,7 @@ def download_wx_avatar(request):
     logger.warn('Failed to download wx avatar, error: %s' % str(e))
     return JsonResponse({'result': False, 'code':'URLError', 'message': e})
 
-  filename = '%s.jpg' % uuid.uuid1()
+  filename = 'wx_head_%s.jpg' % uuid.uuid1()
   relative_directory = 'avatar/%d/%02d/%02d' % (now.year, now.month, now.day)
   absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
   avatar_url = '%s/%s'%(relative_directory, filename)
@@ -99,4 +99,5 @@ def upload(request):
 
   images = filter(os.path.isfile, glob.glob(image_locations + "/*"))
   images.sort(key=lambda x: os.path.getmtime(x))
+  images = [os.path.basename(x) for x in images]
   return render(request,'imager/upload.html',{'images': images, 'form': form})
