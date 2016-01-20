@@ -36,6 +36,9 @@ def download_wx_image(request):
   except urllib2.URLError, e:
     logger.warn('Failed to download wx image, error: %s' % str(e))
     return JsonResponse({'result': False, 'code':'URLError', 'message': e})
+  except ValueError, e:
+    logger.warn('Failed to download wx image %s, error: %s' % (url, str(e)))
+    return JsonResponse({'result': False, 'code':'ValueError', 'message': e})
 
   filename = '%s.jpg' % uuid.uuid1()
   relative_directory = 'images/%d/%02d/%02d' % (now.year, now.month, now.day)
@@ -88,6 +91,9 @@ def download_avatar(request):
   except urllib2.URLError, e:
     logger.warn('Failed to download avatar %s, error: %s' % (url, str(e)))
     return JsonResponse({'result': False, 'code':'URLError', 'message': e})
+  except ValueError, e:
+    logger.warn('Failed to download avatar %s, error: %s' % (url, str(e)))
+    return JsonResponse({'result': False, 'code':'ValueError', 'message': e})
 
   filename = 'wx_head_%s.jpg' % uuid.uuid1()
   relative_directory = 'avatar/%d/%02d/%02d' % (now.year, now.month, now.day)
