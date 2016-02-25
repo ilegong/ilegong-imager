@@ -102,7 +102,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STORAGE_ROOT = '/Users/aqingsao/storage'
+STORAGE_ROOT = '~/storage'
 
 LOGGING = {
     'version': 1,

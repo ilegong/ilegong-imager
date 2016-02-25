@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse,HttpResponseNotAllowed
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .forms import *
@@ -97,6 +97,8 @@ def upload_weshare_images(request):
   now = timezone.now()
   relative_directory = 'images/%d/%02d/%02d' % (now.year, now.month, now.day)
   absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
+  if not os.path.exists(absolute_directory):
+    os.makedirs(absolute_directory)
 
   image_urls = []
   form = DocumentForm(request.POST, request.FILES)
