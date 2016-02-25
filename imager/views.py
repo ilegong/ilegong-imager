@@ -101,16 +101,23 @@ def upload_weshare_images(request):
     os.makedirs(absolute_directory)
 
   image_urls = []
-  form = DocumentForm(request.POST, request.FILES)
-  for file in request.FILES.getlist('images'):
-    filename = '%s.jpg' % uuid.uuid1()
-    image_url = '%s/%s' % (relative_directory, filename)
-    image_urls.append(image_url)
-    logger.info('try to upload image %s to %s' % (file.name, image_url))
-    with open('%s/%s' % (absolute_directory, filename), "wb") as local_image:
-      for chunk in file.chunks():
-          local_image.write(chunk)
-      logger.info('upload image %s to %s successfully' % (file.name, image_url))
+  try:
+    form = DocumentForm(request.POST, request.FILES)
+    for file in request.FILES.getlist('images'):
+      filename = '%s.jpg' % uuid.uuid1()
+      image_url = '%s/%s' % (relative_directory, filename)
+      image_urls.append(image_url)
+      logger.info('try to upload image %s to %s' % (file.name, image_url))
+      with open('%s/%s' % (absolute_directory, filename), "wb") as local_image:
+        for chunk in file.chunks():
+            local_image.write(chunk)
+        logger.info('upload image %s to %s successfully' % (file.name, image_url))
+  except urllib2.URLError, e:
+    logger.warn('Failed to upload image %s, error: %s' % (url, str(e)))
+    return JsonResponse({'result': False, 'code':'URLError', 'message': e})
+  except ValueError, e:
+    logger.warn('Failed to upload image %s, error: %s' % (url, str(e)))
+    return JsonResponse({'result': False, 'code':'ValueError', 'message': e})
 
   return JsonResponse({'result': True, 'url': image_urls})
 
