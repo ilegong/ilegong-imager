@@ -112,12 +112,9 @@ def upload_weshare_images(request):
         for chunk in file.chunks():
             local_image.write(chunk)
         logger.info('upload image %s to %s successfully' % (file.name, image_url))
-  except urllib2.URLError, e:
+  except IOError, e:
     logger.warn('Failed to upload image %s, error: %s' % (url, str(e)))
-    return JsonResponse({'result': False, 'code':'URLError', 'message': e})
-  except ValueError, e:
-    logger.warn('Failed to upload image %s, error: %s' % (url, str(e)))
-    return JsonResponse({'result': False, 'code':'ValueError', 'message': e})
+    return JsonResponse({'result': False, 'code':'IOError', 'message': e})
 
   return JsonResponse({'result': True, 'url': image_urls})
 
