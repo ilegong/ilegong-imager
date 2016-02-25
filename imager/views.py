@@ -54,26 +54,6 @@ def download_wx_image(request):
 
   return JsonResponse({'result': True, 'url': image_url})
 
-def upload(request):
-  image_locations = '%s/images'% settings.STORAGE_ROOT
-  if request.method == "GET":
-    form = DocumentForm()
-  else:
-    form = DocumentForm(request.POST, request.FILES)
-    for file in request.FILES.getlist('images'):
-      name = '%s.jpg' % uuid.uuid1()
-      logger.info('try to upload image %s to images/%s' % (file.name, name))
-      with open('%s/%s' % (image_locations, name), "wb") as local_image:
-        for chunk in file.chunks():
-            local_image.write(chunk)
-        logger.info('upload image %s to images/%s successfully' % (file.name, name))
-    return redirect('imager:upload')
-
-  images = filter(os.path.isfile, glob.glob(image_locations + "/*"))
-  images.sort(key=lambda x: os.path.getmtime(x))
-  images = [os.path.basename(x) for x in images]
-  return render(request,'imager/upload.html',{'images': images, 'form': form})
-
 @csrf_exempt
 def download_avatar(request):
   if request.method == "GET":
@@ -108,3 +88,47 @@ def download_avatar(request):
     logger.info('download avatar: %s, save as: %s' % (url, avatar_url))
 
   return JsonResponse({'result': True, 'url': avatar_url})
+
+@csrf_exempt
+def upload_weshare_images(request):
+  if request.method == "GET":
+    return HttpResponseNotAllowed('Only POST here')
+
+  now = timezone.now()
+  relative_directory = 'images/%d/%02d/%02d' % (now.year, now.month, now.day)
+  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
+
+  image_urls = []
+  form = DocumentForm(request.POST, request.FILES)
+  for file in request.FILES.getlist('images'):
+    filename = '%s.jpg' % uuid.uuid1()
+    image_url = '%s/%s' % (relative_directory, filename)
+    image_urls.append(image_url)
+    logger.info('try to upload image %s to %s' % (file.name, image_url))
+    with open('%s/%s' % (absolute_directory, filename), "wb") as local_image:
+      for chunk in file.chunks():
+          local_image.write(chunk)
+      logger.info('upload image %s to %s successfully' % (file.name, image_url))
+
+  return JsonResponse({'result': True, 'url': image_urls})
+
+
+def upload(request):
+  image_locations = '%s/images'% settings.STORAGE_ROOT
+  if request.method == "GET":
+    form = DocumentForm()
+  else:
+    form = DocumentForm(request.POST, request.FILES)
+    for file in request.FILES.getlist('images'):
+      name = '%s.jpg' % uuid.uuid1()
+      logger.info('try to upload image %s to images/%s' % (file.name, name))
+      with open('%s/%s' % (image_locations, name), "wb") as local_image:
+        for chunk in file.chunks():
+            local_image.write(chunk)
+        logger.info('upload image %s to images/%s successfully' % (file.name, name))
+    return redirect('imager:upload')
+
+  images = filter(os.path.isfile, glob.glob(image_locations + "/*"))
+  images.sort(key=lambda x: os.path.getmtime(x))
+  images = [os.path.basename(x) for x in images]
+  return render(request,'imager/upload.html',{'images': images, 'form': form})
