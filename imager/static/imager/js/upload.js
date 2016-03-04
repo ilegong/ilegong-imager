@@ -5,7 +5,7 @@ $(function(){
   	var data = new FormData($imagesUploadForm.get(0));
   	$.ajax({
 	  url: $imagesUploadForm.attr('action'),
-  	  type:$imagesUploadForm.attr('method'),
+  	  type: 'POST',
 	  data:data,
 	  contentType:false,
 	  processData:false,
