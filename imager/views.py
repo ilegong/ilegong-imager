@@ -113,28 +113,43 @@ def upload_weshare_images(request):
             local_image.write(chunk)
         logger.info('upload image %s to %s successfully' % (file.name, image_url))
   except IOError, e:
-    logger.warn('Failed to upload image %s, error: %s' % (url, str(e)))
-    return JsonResponse({'result': False, 'code':'IOError', 'message': e})
+    logger.warn('Failed to upload weshare images, error: %s' % str(e))
+    return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
 
   return JsonResponse({'result': True, 'url': image_urls})
 
+def upload_images(request):
+  relative_directory = 'images'
+  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
+  form = DocumentForm()
 
-def upload(request):
-  image_locations = '%s/images'% settings.STORAGE_ROOT
-  if request.method == "GET":
-    form = DocumentForm()
-  else:
-    form = DocumentForm(request.POST, request.FILES)
-    for file in request.FILES.getlist('images'):
-      name = '%s.jpg' % uuid.uuid1()
-      logger.info('try to upload image %s to images/%s' % (file.name, name))
-      with open('%s/%s' % (image_locations, name), "wb") as local_image:
-        for chunk in file.chunks():
-            local_image.write(chunk)
-        logger.info('upload image %s to images/%s successfully' % (file.name, name))
-    return redirect('imager:upload')
-
-  images = filter(os.path.isfile, glob.glob(image_locations + "/*"))
+  images = filter(os.path.isfile, glob.glob(absolute_directory + "/*"))
   images.sort(key=lambda x: os.path.getmtime(x))
   images = [os.path.basename(x) for x in images]
-  return render(request,'imager/upload.html',{'images': images, 'form': form})
+  return render(request,'imager/upload_images.html',{'images': images, 'form': form})
+
+@csrf_exempt
+def upload(request):
+  if request.method == "GET":
+    return redirect('/upload_images');
+
+  relative_directory = 'images'
+  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
+  image_urls = []
+  try:
+    form = DocumentForm(request.POST, request.FILES)
+    for file in request.FILES.getlist('images'):
+      filename = '%s.jpg' % uuid.uuid1()
+      image_url = '%s/%s' % (relative_directory, filename)
+      image_urls.append(image_url)
+      logger.info('try to upload image %s to %s' % (file.name, image_url))
+
+      with open('%s/%s' % (absolute_directory, filename), "wb") as local_image:
+        for chunk in file.chunks():
+            local_image.write(chunk)
+        logger.info('upload image %s to %s successfully' % (file.name, image_url))
+  except IOError, e:
+    logger.warn('Failed to upload images, error: %s' % str(e))
+    return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
+
+  return JsonResponse({'result': True, 'url': image_urls})

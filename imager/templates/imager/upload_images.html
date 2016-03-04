@@ -4,12 +4,12 @@
 {% block content %}
 <div>
   <h1>上传图片</h1>
-  <form action="{% url "imager:upload" %}" method="post" enctype="multipart/form-data">
+  <form class='images-upload-form' action="{% url "imager:upload" %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <p>{{ form.non_field_errors }}</p>
 
     <div><input type="file" name="images" multiple></div>
-    <p><input class="btn btn-info" type="submit" value="点击上传"/></p>
+    <p><input class="btn btn-info images-upload-btn" type="submit" value="点击上传" onclick=''/></p>
   </form>
 </div>
 
@@ -45,4 +45,3 @@
 {% block scripts %}
   <script type="text/javascript" src="{% static "imager/js/upload.js" %}"></script>
 {% endblock %}
-
