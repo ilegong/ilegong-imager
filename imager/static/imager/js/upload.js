@@ -9,12 +9,18 @@ $(function(){
 	  data:data,
 	  contentType:false,
 	  processData:false,
-      success: function(data) {
-  		console.log(data);
-      }
+      success: onUploadFinished
 	}).fail(function() {
-      alert( "上传失败");
+      alert( "上传失败: 请联系管理员");
   	}); 
     return false;
   });
+  var onUploadFinished = function(data){
+  	if(data.result) {
+	  alert(data.url);
+  	}
+  	else{
+  		alert('上传失败: ' + data.message);
+  	}
+  }
 });
