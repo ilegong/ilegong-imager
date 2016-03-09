@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 from .models import *
+from services/images import *
 from django.conf import settings
 from os import listdir
 from os.path import isfile, join
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Create your views here.
 def index(request):
-  return HttpResponse("Hello, world. You're at the polls index.")
+  return HttpResponse("Hello, world.")
 
 @csrf_exempt
 def download_wx_image(request):
