@@ -114,11 +114,11 @@ def ensure_directory(directory):
     os.makedirs(directory)
   return directory
 
-if len(sys.argv) < 2:
-    logger.debug('Error: Please provide a directory')
-    sys.exit(0);
-if not os.path.isdir(sys.argv[1]):
-    logger.debug('Error: directory %s does not exist or is not a directory.' % sys.argv[1])
-    sys.exit(0);
+# if len(sys.argv) < 2:
+#     logger.debug('Error: Please provide a directory')
+#     sys.exit(0);
+# if not os.path.isdir(sys.argv[1]):
+#     logger.debug('Error: directory %s does not exist or is not a directory.' % sys.argv[1])
+#     sys.exit(0);
 
-compressDirectory(sys.argv[1])            
+# compressDirectory(sys.argv[1])            
