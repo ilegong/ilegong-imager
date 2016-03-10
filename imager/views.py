@@ -4,7 +4,8 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .forms import *
 from .models import *
-from services/images import *
+from services.images import *
+from services.files import *
 from django.conf import settings
 from os import listdir
 from os.path import isfile, join
@@ -78,17 +79,16 @@ def download_avatar(request):
 
   filename = 'wx_head_%s.jpg' % uuid.uuid1()
   relative_directory = 'avatar/%d/%02d/%02d' % (now.year, now.month, now.day)
-  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
-  avatar_url = '%s/%s'%(relative_directory, filename)
+  absolute_directory = ensure_directory('%s/%s' % (settings.STORAGE_ROOT, relative_directory))
 
-  if not os.path.exists(absolute_directory):
-    os.makedirs(absolute_directory)
-
-  with open('%s/%s' % (absolute_directory, filename), "wb") as code:
+  image = '%s/%s' % (absolute_directory, filename)
+  with open(image, "wb") as code:
     code.write(response.read())
-    logger.info('download avatar: %s, save as: %s' % (url, avatar_url))
+    logger.info('download avatar: %s, save as: %s' % (url, image))
+    compress_image_to(image, ensure_directory('%s/avatar/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
+    compress_image_to(image, ensure_directory('%s/avatar/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
 
-  return JsonResponse({'result': True, 'url': avatar_url})
+  return JsonResponse({'result': True, 'url': '%s/%s'%(relative_directory, filename)})
 
 @csrf_exempt
 def upload_weshare_images(request):
@@ -97,9 +97,7 @@ def upload_weshare_images(request):
 
   now = timezone.now()
   relative_directory = 'images/%d/%02d/%02d' % (now.year, now.month, now.day)
-  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
-  if not os.path.exists(absolute_directory):
-    os.makedirs(absolute_directory)
+  absolute_directory = ensure_directory('%s/%s' % (settings.STORAGE_ROOT, relative_directory))
 
   image_urls = []
   try:
