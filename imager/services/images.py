@@ -106,8 +106,13 @@ def compressDirectory(directory):
         if file.find('_thumb') >= 0:
             continue
 
-        compress_image_to(file, ensure_directory(directory.replace('avatar/', 'avatar/m/')), 150, 150)
-        compress_image_to(file, ensure_directory(directory.replace('avatar/', 'avatar/s/')), 80, 80)
+        if file.find('avatar/') >= 0:
+            compress_image_to(file, ensure_directory(directory.replace('avatar/', 'avatar/m/')), 150, 150)
+            compress_image_to(file, ensure_directory(directory.replace('avatar/', 'avatar/s/')), 80, 80)
+        elif file.find('images/') >= 0:
+            compress_image_to(file, ensure_directory(directory.replace('images/', 'images/m/')), 150, 150)
+            compress_image_to(file, ensure_directory(directory.replace('images/', 'images/s/')), 80, 80)
+
 
 def ensure_directory(directory):
   if not os.path.exists(directory):
