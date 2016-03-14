@@ -97,33 +97,41 @@ def compress_image_to(file, directory, width, height):
         logger.warn('Failed to compress %s: %s' % (file, str(e)))
         shutil.copyfile(file, newfile)
 
+def compressFile(file):
+    if file.find('_thumb') >= 0:
+        logger.debug('Ignore: file %s is already a thumb' % file)
+        return
+
+    if file.find('avatar/') >= 0:
+        compress_image_to(file, ensure_directory(file.replace('avatar/', 'avatar/m/')), 150, 150)
+        compress_image_to(file, ensure_directory(file.replace('avatar/', 'avatar/s/')), 80, 80)
+    elif file.find('images/') >= 0:
+        compress_image_to(file, ensure_directory(file.replace('images/', 'images/m/')), 150, 150)
+        compress_image_to(file, ensure_directory(file.replace('images/', 'images/s/')), 80, 80)
+
 def compressDirectory(directory):
     for file in glob.glob(directory + '/*'):
         if os.path.isdir(file):
             logger.debug('Compress images in directory %s' % os.path.abspath(file))
             compressDirectory(file)
-            continue
-        if file.find('_thumb') >= 0:
-            continue
-
-        if file.find('avatar/') >= 0:
-            compress_image_to(file, ensure_directory(directory.replace('avatar/', 'avatar/m/')), 150, 150)
-            compress_image_to(file, ensure_directory(directory.replace('avatar/', 'avatar/s/')), 80, 80)
-        elif file.find('images/') >= 0:
-            compress_image_to(file, ensure_directory(directory.replace('images/', 'images/m/')), 150, 150)
-            compress_image_to(file, ensure_directory(directory.replace('images/', 'images/s/')), 80, 80)
-
+        else:
+            compressFile(file)
 
 def ensure_directory(directory):
   if not os.path.exists(directory):
     os.makedirs(directory)
   return directory
 
-# if len(sys.argv) < 2:
-#     logger.debug('Error: Please provide a directory')
-#     sys.exit(0);
-# if not os.path.isdir(sys.argv[1]):
-#     logger.debug('Error: directory %s does not exist or is not a directory.' % sys.argv[1])
-#     sys.exit(0);
+if len(sys.argv) < 2:
+    logger.debug('Error: Please provide a directory')
+    sys.exit(0);
+if os.path.isfile(sys.argv[1]):
+    logger.debug('try to compress file %s' % sys.argv[1])
+    compressFile(sys.argv[1])
+    sys.exit(0);
 
-# compressDirectory(sys.argv[1])            
+if not os.path.isdir(sys.argv[1]):
+    logger.debug('Error: directory %s does not exist or is not a directory.' % sys.argv[1])
+    sys.exit(0);
+
+compressDirectory(sys.argv[1])            

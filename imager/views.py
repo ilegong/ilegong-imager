@@ -44,17 +44,16 @@ def download_wx_image(request):
 
   filename = '%s.jpg' % uuid.uuid1()
   relative_directory = 'images/%d/%02d/%02d' % (now.year, now.month, now.day)
-  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
-  image_url = '%s/%s'%(relative_directory, filename)
+  absolute_directory = ensure_directory('%s/%s' % (settings.STORAGE_ROOT, relative_directory))
 
-  if not os.path.exists(absolute_directory):
-    os.makedirs(absolute_directory)
-
-  with open('%s/%s' % (absolute_directory, filename), "wb") as code:
+  image = '%s/%s' % (absolute_directory, filename)
+  with open(image, "wb") as code:
     code.write(response.read())
-    logger.info('download wx image: %s, save as: %s' % (request.GET['media_id'], image_url))
+    logger.info('download wx image: %s, save as: %s' % (request.GET['media_id'], image))
+    compress_image_to(image, ensure_directory('%s/images/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
+    compress_image_to(image, ensure_directory('%s/images/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
 
-  return JsonResponse({'result': True, 'url': image_url})
+  return JsonResponse({'result': True, 'url': '%s/%s'%(relative_directory, filename)})
 
 @csrf_exempt
 def download_avatar(request):
@@ -107,10 +106,13 @@ def upload_weshare_images(request):
       image_url = '%s/%s' % (relative_directory, filename)
       image_urls.append(image_url)
       logger.info('try to upload image %s to %s' % (file.name, image_url))
-      with open('%s/%s' % (absolute_directory, filename), "wb") as local_image:
+      image = '%s/%s' % (absolute_directory, filename)
+      with open(image, "wb") as local_image:
         for chunk in file.chunks():
             local_image.write(chunk)
         logger.info('upload image %s to %s successfully' % (file.name, image_url))
+        compress_image_to(image, ensure_directory('%s/images/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
+        compress_image_to(image, ensure_directory('%s/images/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
   except IOError, e:
     logger.warn('Failed to upload weshare images, error: %s' % str(e))
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
