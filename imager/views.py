@@ -50,8 +50,9 @@ def download_wx_image(request):
   with open(image, "wb") as code:
     code.write(response.read())
     logger.info('download wx image: %s, save as: %s' % (request.GET['media_id'], image))
-    compress_image_to(image, ensure_directory('%s/images/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
-    compress_image_to(image, ensure_directory('%s/images/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
+  
+  compress_image_to(image, ensure_directory('%s/images/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
+  compress_image_to(image, ensure_directory('%s/images/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
 
   return JsonResponse({'result': True, 'url': '%s/%s'%(relative_directory, filename)})
 
@@ -84,8 +85,8 @@ def download_avatar(request):
   with open(image, "wb") as code:
     code.write(response.read())
     logger.info('download avatar: %s, save as: %s' % (url, image))
-    compress_image_to(image, ensure_directory('%s/avatar/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
-    compress_image_to(image, ensure_directory('%s/avatar/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
+  compress_image_to(image, ensure_directory('%s/avatar/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
+  compress_image_to(image, ensure_directory('%s/avatar/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
 
   return JsonResponse({'result': True, 'url': '%s/%s'%(relative_directory, filename)})
 
@@ -111,8 +112,8 @@ def upload_weshare_images(request):
         for chunk in file.chunks():
             local_image.write(chunk)
         logger.info('upload image %s to %s successfully' % (file.name, image_url))
-        compress_image_to(image, ensure_directory('%s/images/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
-        compress_image_to(image, ensure_directory('%s/images/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
+      compress_image_to(image, ensure_directory('%s/images/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
+      compress_image_to(image, ensure_directory('%s/images/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
   except IOError, e:
     logger.warn('Failed to upload weshare images, error: %s' % str(e))
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
