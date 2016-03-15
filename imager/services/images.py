@@ -117,7 +117,8 @@ def compressDirectory(directory):
         else:
             compressFile(file)
 
-def ensure_directory(directory):
+def ensure_directory(file):
+  directory = os.path.dirname(file)
   if not os.path.exists(directory):
     os.makedirs(directory)
   return directory
