@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 def index(request):
   return HttpResponse("Hello, world.")
 
+# download images from wx by media_id and access_token
 @csrf_exempt
 def download_wx_image(request):
   now = timezone.now()
@@ -51,11 +52,9 @@ def download_wx_image(request):
     code.write(response.read())
     logger.info('download wx image: %s, save as: %s' % (request.GET['media_id'], image))
   
-  compress_image_to(image, ensure_directory('%s/images/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
-  compress_image_to(image, ensure_directory('%s/images/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
-
   return JsonResponse({'result': True, 'url': '%s/%s'%(relative_directory, filename)})
 
+# download avatar from given url
 @csrf_exempt
 def download_avatar(request):
   if request.method == "GET":
@@ -85,11 +84,10 @@ def download_avatar(request):
   with open(image, "wb") as code:
     code.write(response.read())
     logger.info('download avatar: %s, save as: %s' % (url, image))
-  compress_image_to(image, ensure_directory('%s/avatar/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
-  compress_image_to(image, ensure_directory('%s/avatar/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
 
   return JsonResponse({'result': True, 'url': '%s/%s'%(relative_directory, filename)})
 
+# upload multiple images for a weshare
 @csrf_exempt
 def upload_weshare_images(request):
   if request.method == "GET":
@@ -120,22 +118,13 @@ def upload_weshare_images(request):
 
   return JsonResponse({'result': True, 'url': image_urls})
 
-def upload_images(request):
-  relative_directory = 'images'
-  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
-  form = DocumentForm()
-
-  images = filter(os.path.isfile, glob.glob(absolute_directory + "/*"))
-  images.sort(key=lambda x: os.path.getmtime(x))
-  images = [os.path.basename(x) for x in images]
-  return render(request,'imager/upload_images.html',{'images': images, 'form': form})
-
+# upload a pool image or index image
 @csrf_exempt
-def upload(request):
+def upload_index_images(request):
   if request.method == "GET":
     return redirect('/upload_images');
 
-  relative_directory = 'images'
+  relative_directory = 'images/index'
   absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
   image_urls = []
   try:
@@ -155,3 +144,41 @@ def upload(request):
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
 
   return JsonResponse({'result': True, 'url': image_urls})
+
+# upload a pool image or index image
+@csrf_exempt
+def upload(request):
+  if request.method == "GET":
+    return redirect('/upload_images');
+
+  relative_directory = 'images/index'
+  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
+  image_urls = []
+  try:
+    form = DocumentForm(request.POST, request.FILES)
+    for file in request.FILES.getlist('images'):
+      filename = '%s.jpg' % uuid.uuid1()
+      image_url = '%s/%s' % (relative_directory, filename)
+      image_urls.append(image_url)
+      logger.info('try to upload image %s to %s' % (file.name, image_url))
+
+      with open('%s/%s' % (absolute_directory, filename), "wb") as local_image:
+        for chunk in file.chunks():
+            local_image.write(chunk)
+        logger.info('upload image %s to %s successfully' % (file.name, image_url))
+  except IOError, e:
+    logger.warn('Failed to upload images, error: %s' % str(e))
+    return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
+
+  return JsonResponse({'result': True, 'url': image_urls})
+
+# list images that uploaded before
+def upload_images(request):
+  relative_directory = 'images'
+  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
+  form = DocumentForm()
+
+  images = filter(os.path.isfile, glob.glob(absolute_directory + "/*"))
+  images.sort(key=lambda x: os.path.getmtime(x))
+  images = [os.path.basename(x) for x in images]
+  return render(request,'imager/upload_images.html',{'images': images, 'form': form})
