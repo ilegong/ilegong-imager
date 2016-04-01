@@ -110,8 +110,6 @@ def upload_weshare_images(request):
         for chunk in file.chunks():
             local_image.write(chunk)
         logger.info('upload image %s to %s successfully' % (file.name, image_url))
-      compress_image_to(image, ensure_directory('%s/images/m/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 150, 150)
-      compress_image_to(image, ensure_directory('%s/images/s/%d/%02d/%02d/' % (settings.STORAGE_ROOT, now.year, now.month, now.day)), 80, 80)
   except IOError, e:
     logger.warn('Failed to upload weshare images, error: %s' % str(e))
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
@@ -174,11 +172,12 @@ def upload(request):
 
 # list images that uploaded before
 def upload_images(request):
-  relative_directory = 'images'
+  relative_directory = 'images/index'
   absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
   form = DocumentForm()
 
   images = filter(os.path.isfile, glob.glob(absolute_directory + "/*"))
   images.sort(key=lambda x: os.path.getmtime(x))
-  images = [os.path.basename(x) for x in images]
+  images.reverse()
+  images = [x.replace('%s/' % settings.STORAGE_ROOT, '') for x in images]
   return render(request,'imager/upload_images.html',{'images': images, 'form': form})
