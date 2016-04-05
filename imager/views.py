@@ -9,7 +9,7 @@ from services.files import *
 from django.conf import settings
 from os import listdir
 from os.path import isfile, join
-import urllib2, uuid, os, json, logging, glob
+import urllib2, uuid, os, json, logging, glob, base64
 logger = logging.getLogger(__name__)
 
 # Create your views here.
@@ -80,34 +80,37 @@ def download_avatar(request):
     logger.warn('Failed to download image, error: %s' % str(e))
     return JsonResponse({'result': False, 'message': str(e)})
 
+# upload avatar
+# upload_weshare_images and upload_index_images could be replaced by this function
+# POST, url, directory, 
+@csrf_exempt
+def upload_images_with_base64(request):
+  if request.method == "GET":
+    return HttpResponseNotAllowed('Only POST here')
+  if 'category' not in request.POST:
+    return HttpResponseBadRequest('Please provide category')
+
+  try:
+    raw_data = base64.decodestring(request.POST['images'].split(';')[-1].split(',')[-1]);
+    image_urls = save_images_with_raw_data(raw_data, request.POST['category'], '%s.jpg' % uuid.uuid1())
+    logger.info(image_urls);
+    return JsonResponse({'result': True, 'url': image_urls})
+  except Exception, e:
+    logger.warn('Failed to upload images, error: %s' % str(e))
+    return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
+
 # upload multiple images for a weshare
 @csrf_exempt
 def upload_weshare_images(request):
   if request.method == "GET":
     return HttpResponseNotAllowed('Only POST here')
 
-  now = timezone.now()
-  relative_directory = 'images/%d/%02d/%02d' % (now.year, now.month, now.day)
-  absolute_directory = ensure_directory('%s/%s' % (settings.STORAGE_ROOT, relative_directory))
-
-  image_urls = []
   try:
-    form = DocumentForm(request.POST, request.FILES)
-    for file in request.FILES.getlist('images'):
-      filename = '%s.jpg' % uuid.uuid1()
-      image_url = '%s/%s' % (relative_directory, filename)
-      image_urls.append(image_url)
-      logger.info('try to upload image %s to %s' % (file.name, image_url))
-      image = '%s/%s' % (absolute_directory, filename)
-      with open(image, "wb") as local_image:
-        for chunk in file.chunks():
-            local_image.write(chunk)
-        logger.info('upload image %s to %s successfully' % (file.name, image_url))
-  except IOError, e:
-    logger.warn('Failed to upload weshare images, error: %s' % str(e))
+    image_urls = save_images_with_file_streams(request.FILES.getlist('images'), 'images', '%s.jpg' % uuid.uuid1())
+    return JsonResponse({'result': True, 'url': image_urls})
+  except Exception, e:
+    logger.warn('Failed to upload images, error: %s' % str(e))
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
-
-  return JsonResponse({'result': True, 'url': image_urls})
 
 # upload a pool image or index image
 @csrf_exempt
@@ -115,26 +118,12 @@ def upload_index_images(request):
   if request.method == "GET":
     return redirect('/upload_images');
 
-  relative_directory = 'images/index'
-  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
-  image_urls = []
   try:
-    form = DocumentForm(request.POST, request.FILES)
-    for file in request.FILES.getlist('images'):
-      filename = '%s.jpg' % uuid.uuid1()
-      image_url = '%s/%s' % (relative_directory, filename)
-      image_urls.append(image_url)
-      logger.info('try to upload image %s to %s' % (file.name, image_url))
-
-      with open('%s/%s' % (absolute_directory, filename), "wb") as local_image:
-        for chunk in file.chunks():
-            local_image.write(chunk)
-        logger.info('upload image %s to %s successfully' % (file.name, image_url))
-  except IOError, e:
+    image_urls = save_images_with_file_streams(request.FILES.getlist('images'), 'images/index', '%s.jpg' % uuid.uuid1())
+    return JsonResponse({'result': True, 'url': image_urls})
+  except Exception, e:
     logger.warn('Failed to upload images, error: %s' % str(e))
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
-
-  return JsonResponse({'result': True, 'url': image_urls})
 
 # upload a pool image or index image
 @csrf_exempt
@@ -142,26 +131,12 @@ def upload(request):
   if request.method == "GET":
     return redirect('/upload_images');
 
-  relative_directory = 'images/index'
-  absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
-  image_urls = []
   try:
-    form = DocumentForm(request.POST, request.FILES)
-    for file in request.FILES.getlist('images'):
-      filename = '%s.jpg' % uuid.uuid1()
-      image_url = '%s/%s' % (relative_directory, filename)
-      image_urls.append(image_url)
-      logger.info('try to upload image %s to %s' % (file.name, image_url))
-
-      with open('%s/%s' % (absolute_directory, filename), "wb") as local_image:
-        for chunk in file.chunks():
-            local_image.write(chunk)
-        logger.info('upload image %s to %s successfully' % (file.name, image_url))
-  except IOError, e:
+    image_urls = save_images_with_file_streams(request.FILES.getlist('images'), 'images/index', '%s.jpg' % uuid.uuid1())
+    return JsonResponse({'result': True, 'url': image_urls})
+  except Exception, e:
     logger.warn('Failed to upload images, error: %s' % str(e))
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
-
-  return JsonResponse({'result': True, 'url': image_urls})
 
 # list images that uploaded before
 def upload_images(request):
