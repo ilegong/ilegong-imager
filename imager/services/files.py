@@ -38,7 +38,7 @@ def download_image(url, category, filename):
     code.write(response.read())
     return '%s/%s'%(relative_directory, filename)
 
-def save_images_with_file_streams(files, category, filename):
+def save_images_with_attachments(files, category, filename):
   now = timezone.now()
   relative_directory = '%s/%d/%02d/%02d' % (category, now.year, now.month, now.day)
   absolute_directory = ensure_directory('%s/%s' % (settings.STORAGE_ROOT, relative_directory))

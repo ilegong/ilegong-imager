@@ -80,7 +80,7 @@ def download_avatar(request):
     logger.warn('Failed to download image, error: %s' % str(e))
     return JsonResponse({'result': False, 'message': str(e)})
 
-# upload avatar
+# upload image with base64 encoded
 # upload_weshare_images and upload_index_images could be replaced by this function
 # POST, url, directory, 
 @csrf_exempt
@@ -89,11 +89,31 @@ def upload_images_with_base64(request):
     return HttpResponseNotAllowed('Only POST here')
   if 'category' not in request.POST:
     return HttpResponseBadRequest('Please provide category')
+  if 'token' not in request.POST or 'PYS_IMAGES_001' != request.POST['token']: 
+    return HttpResponseForbidden('Forbidden')
 
   try:
     raw_data = base64.decodestring(request.POST['images'].split(';')[-1].split(',')[-1]);
     image_urls = save_images_with_raw_data(raw_data, request.POST['category'], '%s.jpg' % uuid.uuid1())
     logger.info(image_urls);
+    return JsonResponse({'result': True, 'url': image_urls})
+  except Exception, e:
+    logger.warn('Failed to upload images, error: %s' % str(e))
+    return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
+
+# upload image with file stream
+# POST, url, directory, 
+@csrf_exempt
+def upload_images_with_attachments(request):
+  if request.method == "GET":
+    return redirect('/upload_images');
+  if 'category' not in request.POST:
+    return HttpResponseBadRequest('Please provide category')
+  if 'token' not in request.POST or 'PYS_IMAGES_001' != request.POST['token']: 
+    return HttpResponseForbidden('Forbidden')
+
+  try:
+    image_urls = save_images_with_attachments(request.FILES.getlist('images'), request.POST['category'], '%s.jpg' % uuid.uuid1())
     return JsonResponse({'result': True, 'url': image_urls})
   except Exception, e:
     logger.warn('Failed to upload images, error: %s' % str(e))
@@ -106,20 +126,7 @@ def upload_weshare_images(request):
     return HttpResponseNotAllowed('Only POST here')
 
   try:
-    image_urls = save_images_with_file_streams(request.FILES.getlist('images'), 'images', '%s.jpg' % uuid.uuid1())
-    return JsonResponse({'result': True, 'url': image_urls})
-  except Exception, e:
-    logger.warn('Failed to upload images, error: %s' % str(e))
-    return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
-
-# upload a pool image or index image
-@csrf_exempt
-def upload_index_images(request):
-  if request.method == "GET":
-    return redirect('/upload_images');
-
-  try:
-    image_urls = save_images_with_file_streams(request.FILES.getlist('images'), 'images/index', '%s.jpg' % uuid.uuid1())
+    image_urls = save_images_with_attachments(request.FILES.getlist('images'), 'images', '%s.jpg' % uuid.uuid1())
     return JsonResponse({'result': True, 'url': image_urls})
   except Exception, e:
     logger.warn('Failed to upload images, error: %s' % str(e))
@@ -132,7 +139,7 @@ def upload(request):
     return redirect('/upload_images');
 
   try:
-    image_urls = save_images_with_file_streams(request.FILES.getlist('images'), 'images/index', '%s.jpg' % uuid.uuid1())
+    image_urls = save_images_with_attachments(request.FILES.getlist('images'), 'images/index', '%s.jpg' % uuid.uuid1())
     return JsonResponse({'result': True, 'url': image_urls})
   except Exception, e:
     logger.warn('Failed to upload images, error: %s' % str(e))
