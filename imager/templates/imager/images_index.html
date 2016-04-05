@@ -4,7 +4,7 @@
 {% block content %}
 <div>
   <h1>上传图片</h1>
-  <form class='images-upload-form' action="{% url "imager:upload_images_with_attachments" %}" method="post" enctype="multipart/form-data">
+  <form class='images-upload-form' action="{% url "imager:upload_images_to" %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <p>{{ form.non_field_errors }}</p>
     <input type="hidden" name='token' value="PYS_IMAGES_001">

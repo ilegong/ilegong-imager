@@ -20,11 +20,10 @@ def index(request):
 # download_wx_image and download_avatar could be replaced by this function
 # POST, url, directory, 
 @csrf_exempt
-def download_image_to(request):
+def download_image_from(request):
   now = timezone.now()
   if request.method == "GET":
     return HttpResponseNotAllowed('Only POST here')
-
   token = request.POST['token'];
   if 'PYS_IMAGES_001' != token: 
     return HttpResponseForbidden('Forbidden')
@@ -46,6 +45,7 @@ def download_image_to(request):
     return JsonResponse({'result': False, 'message': str(e)})
   
 # download images from wx by media_id and access_token
+# @deprecated, use download_image_to
 @csrf_exempt
 def download_wx_image(request):
   now = timezone.now()
@@ -65,6 +65,7 @@ def download_wx_image(request):
     return JsonResponse({'result': False, 'message': str(e)})
   
 # download avatar from given url
+# @deprecated, use download_image_to
 @csrf_exempt
 def download_avatar(request):
   if request.method == "GET":
@@ -104,9 +105,9 @@ def upload_images_with_base64(request):
 # upload image with file stream
 # POST, url, directory, 
 @csrf_exempt
-def upload_images_with_attachments(request):
+def upload_images_to(request):
   if request.method == "GET":
-    return redirect('/upload_images');
+    return redirect('/images_index');
   if 'category' not in request.POST:
     return HttpResponseBadRequest('Please provide category')
   if 'token' not in request.POST or 'PYS_IMAGES_001' != request.POST['token']: 
@@ -120,6 +121,7 @@ def upload_images_with_attachments(request):
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
 
 # upload multiple images for a weshare
+# @deprecated, use upload_images_with_attachments
 @csrf_exempt
 def upload_weshare_images(request):
   if request.method == "GET":
@@ -133,10 +135,11 @@ def upload_weshare_images(request):
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
 
 # upload a pool image or index image
+# @deprecated, use upload_images_with_attachments
 @csrf_exempt
 def upload(request):
   if request.method == "GET":
-    return redirect('/upload_images');
+    return redirect('/images_index');
 
   try:
     image_urls = save_images_with_attachments(request.FILES.getlist('images'), 'images/index', '%s.jpg' % uuid.uuid1())
@@ -146,7 +149,7 @@ def upload(request):
     return JsonResponse({'result': False, 'code':'IOError', 'message': str(e)})
 
 # list images that uploaded before
-def upload_images(request):
+def images_index(request):
   relative_directory = 'images/index'
   absolute_directory = '%s/%s' % (settings.STORAGE_ROOT, relative_directory)
   form = DocumentForm()
@@ -155,4 +158,4 @@ def upload_images(request):
   images.sort(key=lambda x: os.path.getmtime(x))
   images.reverse()
   images = [x.replace('%s/' % settings.STORAGE_ROOT, '') for x in images]
-  return render(request,'imager/upload_images.html',{'images': images, 'form': form})
+  return render(request,'imager/images_index.html',{'images': images, 'form': form})
