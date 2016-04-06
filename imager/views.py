@@ -18,7 +18,7 @@ def index(request):
 
 # download images from given urls and write to a specific directory
 # download_wx_image and download_avatar could be replaced by this function
-# POST, url, directory, 
+# POST, url, category, 
 @csrf_exempt
 def download_image_from(request):
   now = timezone.now()
@@ -95,7 +95,7 @@ def upload_images_with_base64(request):
 
   try:
     raw_data = base64.decodestring(request.POST['images'].split(';')[-1].split(',')[-1]);
-    image_urls = save_images_with_raw_data(raw_data, request.POST['category'], '%s.jpg' % uuid.uuid1())
+    image_urls = save_image_with_raw_data(raw_data, request.POST['category'], '%s.jpg' % uuid.uuid1())
     logger.info(image_urls);
     return JsonResponse({'result': True, 'url': image_urls})
   except Exception, e:
@@ -114,7 +114,7 @@ def upload_images_to(request):
     return HttpResponseForbidden('Forbidden')
 
   try:
-    image_urls = save_images_with_attachments(request.FILES.getlist('images'), request.POST['category'], '%s.jpg' % uuid.uuid1())
+    image_urls = save_images_with_attachments(request.FILES.getlist('images'), request.POST['category'])
     return JsonResponse({'result': True, 'url': image_urls})
   except Exception, e:
     logger.warn('Failed to upload images, error: %s' % str(e))
@@ -128,7 +128,7 @@ def upload_weshare_images(request):
     return HttpResponseNotAllowed('Only POST here')
 
   try:
-    image_urls = save_images_with_attachments(request.FILES.getlist('images'), 'images', '%s.jpg' % uuid.uuid1())
+    image_urls = save_images_with_attachments(request.FILES.getlist('images'), 'images')
     return JsonResponse({'result': True, 'url': image_urls})
   except Exception, e:
     logger.warn('Failed to upload images, error: %s' % str(e))
@@ -142,7 +142,7 @@ def upload(request):
     return redirect('/images_index');
 
   try:
-    image_urls = save_images_with_attachments(request.FILES.getlist('images'), 'images/index', '%s.jpg' % uuid.uuid1())
+    image_urls = save_images_with_attachments(request.FILES.getlist('images'), 'images/index')
     return JsonResponse({'result': True, 'url': image_urls})
   except Exception, e:
     logger.warn('Failed to upload images, error: %s' % str(e))

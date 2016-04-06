@@ -38,7 +38,7 @@ def download_image(url, category, filename):
     code.write(response.read())
     return '%s/%s'%(relative_directory, filename)
 
-def save_images_with_attachments(files, category, filename):
+def save_images_with_attachments(files, category):
   now = timezone.now()
   relative_directory = '%s/%d/%02d/%02d' % (category, now.year, now.month, now.day)
   absolute_directory = ensure_directory('%s/%s' % (settings.STORAGE_ROOT, relative_directory))
@@ -46,6 +46,7 @@ def save_images_with_attachments(files, category, filename):
   image_urls = []
   try:
     for file in files:
+      filename = '%s.jpg' % uuid.uuid1()
       image_url = '%s/%s' % (relative_directory, filename)
       image_urls.append(image_url)
       logger.info('try to upload image %s to %s' % (file.name, image_url))
