@@ -60,7 +60,7 @@ def save_images_with_attachments(files, category):
 
   return image_urls
 
-def save_images_with_raw_data(raw_data, category, filename):
+def save_image_with_raw_data(raw_data, category, filename):
   now = timezone.now()
   relative_directory = '%s/%d/%02d/%02d' % (category, now.year, now.month, now.day)
   absolute_directory = ensure_directory('%s/%s' % (settings.STORAGE_ROOT, relative_directory))

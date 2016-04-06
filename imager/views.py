@@ -58,7 +58,7 @@ def download_wx_image(request):
     filename = '%s.jpg' % uuid.uuid1()
 
     image_url = download_image(url, 'images', filename)
-    logger.info('download image: %s, save as: %s' % (request.POST['url'], image_url))
+    logger.info('download image: %s, save as: %s' % (url, image_url))
     return JsonResponse({'result': True, 'url': image_url})
   except Exception, e:
     logger.warn('Failed to download image, error: %s' % str(e))
